@@ -2,8 +2,6 @@ var http = require('http');
 var sys = require('util');
 var fs = require('fs');
 const readline = require('readline');
-const rl = readline.createInterface(process.stdin, process.stdout);
-rl.setPrompt('Test> ');
 
 const PORT = 8000;
 http.createServer(function (req, res) {
@@ -24,6 +22,8 @@ http.createServer(function (req, res) {
 }).listen(PORT);
 console.log(`The server is listening on ${PORT}.`)
 
+const userList = {};
+
 function sendSSE(req, res) {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -31,24 +31,21 @@ function sendSSE(req, res) {
     'Connection': 'keep-alive'
   });
 
-  var id = (new Date()).toLocaleTimeString();
+  const id = (new Date()).toLocaleTimeString();
+  userList[id] = {
+    res,
+    connected: new Date()
+  };
+  console.log(id)
 
-  rl.on('line', line => {
-    let msg = '';
-    if ( line === 'red' ) {
-      msg = `<script>document.body.innerHTML = '<div style="background: red;width: 300px;height: 200px"></div>'</script>`;
-    } else {
-      msg = line;
-    }
-    constructSSE(res, id, msg);
-    console.log(`The message is sent to ${id}`)
-    rl.prompt();
+  req.on('close', () => {
+    console.log(`\nUser ${id} is disconnected.\n`);
+    delete userList[id];
   })
 
-  const connectMsg = `User ${id} is connected.`;
+  const connectMsg = `\nUser ${id} is connected.\n`;
   constructSSE(res, id, connectMsg);
   console.log(connectMsg);
-  rl.prompt();
 
   // Sends a SSE every 5 seconds on a single connection.
   // setInterval(function() {
@@ -70,3 +67,26 @@ function debugHeaders(req) {
   }
   sys.puts('\n\n');
 }
+
+/**
+ *
+ */
+const rl = readline.createInterface(process.stdin, process.stdout);
+rl.setPrompt('Test> ');
+rl.on('line', line => {
+  let msg = '';
+  if (line === 'red') {
+    msg = `<script>document.body.innerHTML = '<div style="background: red;width: 300px;height: 200px"></div>'</script>`;
+  } else if (line === 'jiang') {
+    msg = `<img src='https://upload.wikimedia.org/wikipedia/commons/c/ce/Jiang_Zemin_St._Petersburg.jpg' />`;
+  } else {
+    msg = line;
+  }
+
+  for (let id in userList) {
+    const { res } = userList[id];
+    constructSSE(res, id, msg);
+    console.log(`\nThe message is sent to ${id}\n`)
+  }
+  rl.prompt();
+})
