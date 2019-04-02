@@ -6,6 +6,7 @@
   }
 
   source.addEventListener('message', function (e) {
+    document.write(`<p>${e.data}</p>`);
     console.log(e.data);
   }, false);
 

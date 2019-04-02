@@ -1,9 +1,12 @@
 var http = require('http');
 var sys = require('util');
 var fs = require('fs');
+const readline = require('readline');
+const rl = readline.createInterface(process.stdin, process.stdout);
+rl.setPrompt('Test> ');
 
 const PORT = 8000;
-http.createServer(function(req, res) {
+http.createServer(function (req, res) {
   //debugHeaders(req);
 
   if (req.headers.accept && req.headers.accept == 'text/event-stream') {
@@ -14,7 +17,7 @@ http.createServer(function(req, res) {
       res.end();
     }
   } else {
-    res.writeHead(200, {'Content-Type': 'text/html'});
+    res.writeHead(200, { 'Content-Type': 'text/html' });
     res.write(fs.readFileSync(__dirname + '/sse-node.html'));
     res.end();
   }
@@ -30,12 +33,29 @@ function sendSSE(req, res) {
 
   var id = (new Date()).toLocaleTimeString();
 
-  // Sends a SSE every 5 seconds on a single connection.
-  setInterval(function() {
-    constructSSE(res, id, (new Date()).toLocaleTimeString());
-  }, 5000);
+  rl.on('line', line => {
+    let msg = '';
+    if ( line === 'red' ) {
+      msg = `<script>document.body.innerHTML = '<div style="background: red;width: 300px;height: 200px"></div>'</script>`;
+    } else {
+      msg = line;
+    }
+    constructSSE(res, id, msg);
+    console.log(`The message is sent to ${id}`)
+    rl.prompt();
+  })
 
-  constructSSE(res, id, (new Date()).toLocaleTimeString());
+  const connectMsg = `User ${id} is connected.`;
+  constructSSE(res, id, connectMsg);
+  console.log(connectMsg);
+  rl.prompt();
+
+  // Sends a SSE every 5 seconds on a single connection.
+  // setInterval(function() {
+  //   constructSSE(res, id, (new Date()).toLocaleTimeString());
+  // }, 5000);
+
+  // constructSSE(res, id, (new Date()).toLocaleTimeString());
 }
 
 function constructSSE(res, id, data) {
