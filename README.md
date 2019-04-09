@@ -1,5 +1,5 @@
 # sse-implementation
-###(Server-Sent Events)
+(Server-Sent Events)
 A small SSE implementation according to https://www.html5rocks.com/en/tutorials/eventsource/basics/
 
 1. git clone...
