@@ -1,22 +1,23 @@
 <script>
   if (!!window.EventSource) {
     var source = new EventSource('/events');
+    
+    source.addEventListener('message', function (e) {
+      document.write(`<p>${e.data}</p>`);
+      console.log(e.data);
+    }, false);
+
+    source.addEventListener('open', function (e) {
+      // Connection was opened.
+    }, false);
+
+    source.addEventListener('error', function (e) {
+      if (e.readyState == EventSource.CLOSED) {
+        // Connection was closed.
+      }
+    }, false);
   } else {
     // Result to xhr polling :(
   }
 
-  source.addEventListener('message', function (e) {
-    document.write(`<p>${e.data}</p>`);
-    console.log(e.data);
-  }, false);
-
-  source.addEventListener('open', function (e) {
-    // Connection was opened.
-  }, false);
-
-  source.addEventListener('error', function (e) {
-    if (e.readyState == EventSource.CLOSED) {
-      // Connection was closed.
-    }
-  }, false);
 </script>
